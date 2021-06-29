@@ -13,6 +13,8 @@ QRコードのスキャンはオートフォーカスに対応しており、画
 - Android Studio Arctic Fox 2020.3.1 Beta 3
 - Android 5.0以上
 
+https://developer.android.com/studio/preview
+
 ## 使用ライブラリ
 
 - Dagger Hilt
