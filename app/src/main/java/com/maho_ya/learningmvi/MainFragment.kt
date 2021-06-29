@@ -2,7 +2,6 @@ package com.maho_ya.learningmvi
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -19,7 +18,6 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
@@ -27,7 +25,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.google.mlkit.vision.barcode.Barcode
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -35,14 +32,11 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.maho_ya.learningmvi.databinding.FragmentMainBinding
 import com.maho_ya.learningmvi.mvi.MviView
-import com.maho_ya.learningmvi.BarcodeState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import java.nio.ByteBuffer
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -52,17 +46,8 @@ import java.util.concurrent.TimeUnit
 @AndroidEntryPoint
 class MainFragment : Fragment(), MviView<BarcodeState> {
 
-    companion object {
-        const val TAG = "CameraXBasic"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private const val REQUEST_CODE_PERMISSIONS = 10
-    }
-
     private val barcodeViewModel: BarcodeViewModel by viewModels()
-
     private var imageCapture: ImageCapture? = null
-
-    //    private lateinit var camera: Camera
     private lateinit var outputDirectory: File
     private lateinit var binding: FragmentMainBinding
     private lateinit var cameraExecutor: ExecutorService
@@ -73,9 +58,6 @@ class MainFragment : Fragment(), MviView<BarcodeState> {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentMainBinding.inflate(layoutInflater, container, false)
-
-//        binding.cameraCaptureButton.setOnClickListener { takePhoto() }
-
         return binding.root
     }
 
@@ -98,7 +80,6 @@ class MainFragment : Fragment(), MviView<BarcodeState> {
 
         checkCameraPermission {
             startCamera()
-            //ToastUtil.show(requireContext(), "Done")
         }
     }
 
@@ -160,17 +141,14 @@ class MainFragment : Fragment(), MviView<BarcodeState> {
                 .also {
                     it.setAnalyzer(
                         cameraExecutor,
-                        LuminosityAnalyzer(requireContext(), barcodeViewModel) { barcode ->
+                        LuminosityAnalyzer { barcode ->
                             lifecycleScope.launch {
                                 barcodeViewModel.intents.send(BarcodeIntent.ScanBarcode(barcode))
                             }
                         }
-
-//                        { luma ->
-////                            Log.d(TAG, "Average luminosity: $luma")
-//                        }
                     )
                 }
+
             // 背面カメラを選択
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -241,10 +219,7 @@ class MainFragment : Fragment(), MviView<BarcodeState> {
                     else -> false
                 }
             }
-
         }
-
-
     }
 
     private fun setAutoFocus(camera: Camera) {
@@ -266,41 +241,6 @@ class MainFragment : Fragment(), MviView<BarcodeState> {
             }
         }
     }
-
-//    private fun takePhoto() {
-//        // ProcessCameraProviderでImageCaptureの初期化が終わっていない場合は終了する
-//        val imageCapture = imageCapture ?: return
-//
-//        // タイムスタンプ付きのファイルを生成
-//        val photoFile = File(
-//            outputDirectory,
-//            SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-//                .format(System.currentTimeMillis()) + ".jpg"
-//        )
-//
-//        // キャプチャした画像保存用のオプション。保存場所とメタデータの構成に利用される
-//        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-//
-//        // ContextCompat: Contextにアクセスするためのヘルパー
-//
-//        imageCapture.takePicture(
-//            outputOptions,
-//            ContextCompat.getMainExecutor(requireContext()),
-//            object : ImageCapture.OnImageSavedCallback {
-//                override fun onError(exception: ImageCaptureException) {
-//                    Timber.e(exception, "Photo capture failed: ${exception.message}")
-//                }
-//
-//                // 保存時：Toastでメッセージを表示するだけ
-//                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-//                    val savedUri = Uri.fromFile(photoFile)
-//                    val msg = "Photo capture succeeded: $savedUri"
-//                    ToastUtil.show(requireContext(), msg)
-//                    Timber.d(msg)
-//                }
-//            }
-//        )
-//    }
 
     private fun checkCameraPermission(func: () -> Unit) {
         val permission = Manifest.permission.CAMERA
@@ -337,17 +277,11 @@ class MainFragment : Fragment(), MviView<BarcodeState> {
                 requireActivity().finish()
             }
         }
-
-
 }
 
 private class LuminosityAnalyzer(
-    private val context: Context,
-    private val barcodeViewModel: BarcodeViewModel,
     private val intentsSend: (barcode: Barcode) -> Unit
-    //private val listener: (luma: Double) -> Unit
-) :
-    ImageAnalysis.Analyzer {
+) : ImageAnalysis.Analyzer {
 
     private var url: String? = null
 
@@ -379,18 +313,8 @@ private class LuminosityAnalyzer(
             val scanner = BarcodeScanning.getClient(options)
             val result = scanner.process(image)
                 .addOnSuccessListener { barcodes ->
-                    // Task completed successfully
-                    // [START_EXCLUDE]
-                    // [START get_barcodes]
                     for (barcode in barcodes) {
-                        val bounds = barcode.boundingBox
-                        val corners = barcode.cornerPoints
-
-                        val rawValue = barcode.rawValue
-
-                        val valueType = barcode.valueType
-                        // See API reference for complete list of supported types
-                        when (valueType) {
+                        when (barcode.valueType) {
                             Barcode.TYPE_WIFI -> {
                                 val ssid = barcode.wifi!!.ssid
                                 val password = barcode.wifi!!.password
@@ -404,39 +328,16 @@ private class LuminosityAnalyzer(
                                 Timber.v(url!!.toString())
 
                                 intentsSend(barcode)
-
-//                                val webpage: Uri = Uri.parse(url)
-//                                val intent = Intent(Intent.ACTION_VIEW, webpage)
-//                                if (intent.resolveActivity(context.packageManager) != null) {
-//                                    context.startActivity(intent)
-//                                }
                             }
                         }
-
                     }
-                    // [END get_barcodes]
-                    // [END_EXCLUDE]
                 }
                 .addOnFailureListener {
-                    // Task failed with an exception
-                    // ...
                 }
                 .addOnCompleteListener {
                     imageProxy.close()
                 }
         }
-
-//        // 画像からプレーン（平面）にした配列の0番目のピクセルバッファーを取り出す
-//        // jpegのプレーンの数は1つのため。画像形式によりプレーンサイズは違う
-//        val buffer = imageProxy.planes[0].buffer
-//        // 上の拡張メソッドを呼び出し
-//        val data = buffer.toByteArray()
-//        // And演算してピクセルを求める
-//        val pixels = data.map { it.toInt() and 0xFF }
-//        // ピクセルの平均を求める
-//        val luma = pixels.average()
-//        listener(luma)
-//        imageProxy.close()
     }
 }
 
