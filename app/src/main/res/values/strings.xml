@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">LearningMVI</string>
+    <string name="prompt_to_barcode_scan">QRコードをスキャンしてください。</string>
+</resources>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.maho_ya.learningmvi">
+
+    <!-- アプリに必要な機能を宣言する。記述された機能がない端末はGooglePlayで除外される。 -->
+    <!-- android:required-"false"は必須ではない機能。デフォルトはtrue（必須）となる -->
+    <!-- uses-featureを明示的していないのは本来正しくないがGooglePlayで自動的にフィルタリングする仕組みになっている -->
+    <!-- https://developer.android.com/guide/topics/manifest/uses-feature-element?hl=ja#features-reference -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="true" />
+    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- CameraX -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <!-- カメラキャプチャーでの画像保存用。Android9以下のみ必要 -->
+    <!-- https://developer.android.com/about/versions/11/privacy/storage?hl=ja -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <application
+        android:name=".MainApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.LearningMVI">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
