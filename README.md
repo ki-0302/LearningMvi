@@ -8,6 +8,17 @@ QRコードの読み込み・アイドル状態をIntentとし、ViewModel内で
 
 QRコードのスキャンはオートフォーカスに対応しており、画面上をタップすることでタップした位置にフォーカスするようにもなっています。
 
+## 動作環境
+
+- Android Studio Arctic Fox 2020.3.1 Beta 3
+- Android 5.0以上
+
+## 使用ライブラリ
+
+- Dagger Hilt
+- ML Kit
+- Android Jetpack （CameraXなど）
+
 ### テスト用QR
 
 次のQRコードを読み込むと今見ているこのページが表示されれます。
